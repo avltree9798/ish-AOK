@@ -16,8 +16,6 @@ static NSString *const PreviewCellIdentifier = @"Preview";
 
 @interface AboutAppearanceViewController ()
 
-@property UIFontPickerViewController *fontPicker API_AVAILABLE(ios(13));
-
 @end
 
 @implementation AboutAppearanceViewController
@@ -29,20 +27,6 @@ static NSString *const PreviewCellIdentifier = @"Preview";
         [self.tableView reloadData];
         [self setNeedsStatusBarAppearanceUpdate];
     }];
-}
-
-- (void)viewDidAppear:(BOOL)animated {
-    if (@available(iOS 13, *)) {
-        // Initialize the font picker ASAP, as it takes about a quarter second to initialize (XPC crap) and appears invisible until then.
-        // Re-initialize it after navigating away from it, to reset the table view highlight.
-        UIFontPickerViewControllerConfiguration *config = [UIFontPickerViewControllerConfiguration new];
-        config.filteredTraits = UIFontDescriptorTraitMonoSpace;
-        self.fontPicker = [[UIFontPickerViewController alloc] initWithConfiguration:config];
-        // Prevent the font picker from resizing the popup when it appears
-        self.fontPicker.preferredContentSize = CGSizeZero;
-        self.fontPicker.navigationItem.title = @"Font";
-        self.fontPicker.delegate = self;
-    }
 }
 
 #pragma mark - Table view data source
@@ -139,9 +123,13 @@ enum {
     }
 }
 
-- (void)selectFont:(id)sender {
+- (IBAction)selectFont:(id)sender {
     if (@available(iOS 13, *)) {
-        [self.navigationController pushViewController:self.fontPicker animated:YES];
+        UIFontPickerViewControllerConfiguration *config = [UIFontPickerViewControllerConfiguration new];
+        config.filteredTraits = UIFontDescriptorTraitMonoSpace;
+        UIFontPickerViewController *fontPicker = [[UIFontPickerViewController alloc] initWithConfiguration:config];
+        fontPicker.delegate = self;
+        [self presentViewController:fontPicker animated:YES completion:nil];
         return;
     }
     
@@ -151,7 +139,6 @@ enum {
 
 - (void)fontPickerViewControllerDidPickFont:(UIFontPickerViewController *)viewController API_AVAILABLE(ios(13.0)) {
     UserPreferences.shared.fontFamily = viewController.selectedFontDescriptor.fontAttributes[UIFontDescriptorFamilyAttribute];
-    [self.navigationController popToViewController:self animated:YES];
 }
 
 - (IBAction)fontSizeChanged:(UIStepper *)sender {
