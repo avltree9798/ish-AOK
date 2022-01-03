@@ -65,7 +65,7 @@ static void ios_handle_die(const char *msg) {
     pthread_setname_np(newName.UTF8String);
 }
 #elif ISH_LINUX
-void ReportPanic(const char *message, void (^completion)(void)) {
+void ReportPanic(const char *message) {
     [NSNotificationCenter.defaultCenter postNotificationName:KernelPanicNotification object:nil userInfo:@{@"message":@(message)}];
 }
 #endif
@@ -167,15 +167,18 @@ static NSString *const kSkipStartupMessage = @"Skip Startup Message";
         return _EINVAL;
     }
     NSArray<NSString *> *args = @[
-        @"rootfstype=fakefs",
-        [NSString stringWithFormat:@"root=\"%s\"", root.fileSystemRepresentation],
-        @"rw",
     ];
     actuate_kernel([args componentsJoinedByString:@" "].UTF8String);
 #endif
     
     return 0;
 }
+
+#if ISH_LINUX
+const char *DefaultRootPath() {
+    return [Roots.instance rootUrl:Roots.instance.defaultRoot].fileSystemRepresentation;
+}
+#endif
 
 - (void)configureDns {
 #if !ISH_LINUX
